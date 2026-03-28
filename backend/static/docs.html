@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ESI Together – Documents</title>
+  <style>
+    /* ── Reset & base ─────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary:   #1a56db;
+      --primary-h: #1648c4;
+      --bg:        #f0f4f8;
+      --surface:   #ffffff;
+      --sidebar:   #1e2a3b;
+      --sidebar-t: #94a3b8;
+      --text:      #1e293b;
+      --text-muted:#64748b;
+      --border:    #e2e8f0;
+      --radius:    12px;
+      --danger:    #dc2626;
+      --danger-h:  #b91c1c;
+      --success:   #16a34a;
+    }
+
+    body {
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ──────────────────────────────────────────── */
+    .sidebar {
+      width: 240px;
+      min-width: 240px;
+      background: var(--sidebar);
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem 1rem;
+      gap: 0.5rem;
+    }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0 0.5rem 1.25rem;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      margin-bottom: 0.5rem;
+    }
+
+    .sidebar-logo svg { flex-shrink: 0; }
+
+    .sidebar-logo span {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -.2px;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.65rem 0.75rem;
+      border-radius: 8px;
+      color: var(--sidebar-t);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: background .15s, color .15s;
+    }
+
+    .nav-link:hover { background: rgba(255,255,255,.06); color: #fff; }
+    .nav-link.active { background: var(--primary); color: #fff; }
+    .nav-link svg { flex-shrink: 0; }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(255,255,255,.08);
+      font-size: 0.75rem;
+      color: var(--sidebar-t);
+      text-align: center;
+    }
+
+    /* ── Main ─────────────────────────────────────────────── */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Top bar ──────────────────────────────────────────── */
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0.9rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-shrink: 0;
+    }
+
+    .topbar h1 { font-size: 1.1rem; font-weight: 700; }
+
+    /* ── Scrollable content ───────────────────────────────── */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.75rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* ── Card ─────────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+    }
+
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* ── Drop zone ────────────────────────────────────────── */
+    #drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 2.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+      position: relative;
+    }
+
+    #drop-zone:hover,
+    #drop-zone.dragover {
+      border-color: var(--primary);
+      background: #eff6ff;
+    }
+
+    #drop-zone input[type=file] {
+      position: absolute; inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%; height: 100%;
+    }
+
+    .drop-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+
+    .drop-label {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .drop-label strong { color: var(--primary); }
+
+    /* ── Upload progress ──────────────────────────────────── */
+    #upload-progress {
+      display: none;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    #upload-progress.visible { display: flex; }
+
+    .progress-bar-outer {
+      height: 8px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .progress-bar-inner {
+      height: 100%;
+      width: 0%;
+      background: var(--primary);
+      border-radius: 99px;
+      transition: width .3s;
+      animation: pulse-bar 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse-bar {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: .6; }
+    }
+
+    #upload-status {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    /* ── Toast ────────────────────────────────────────────── */
+    #toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background: #1e293b;
+      color: #fff;
+      padding: 0.75rem 1.1rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,.2);
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity .25s, transform .25s;
+      pointer-events: none;
+      z-index: 999;
+      max-width: 320px;
+    }
+
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.success { background: var(--success); }
+    #toast.error   { background: var(--danger); }
+
+    /* ── Document table ───────────────────────────────────── */
+    .doc-count {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-left: auto;
+      font-weight: 400;
+    }
+
+    #docs-table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    thead tr {
+      border-bottom: 2px solid var(--border);
+    }
+
+    th {
+      text-align: left;
+      padding: 0.5rem 0.75rem;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    td {
+      padding: 0.7rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: #f8fafc; }
+
+    .filename-cell {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .file-icon { color: #e74c3c; font-size: 1.1rem; }
+
+    .badge {
+      display: inline-block;
+      background: #eff6ff;
+      color: var(--primary);
+      border-radius: 99px;
+      padding: 0.15rem 0.55rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .delete-btn {
+      background: none;
+      border: 1px solid #fca5a5;
+      color: var(--danger);
+      border-radius: 6px;
+      padding: 0.3rem 0.65rem;
+      font-size: 0.78rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      transition: background .15s;
+    }
+
+    .delete-btn:hover { background: #fef2f2; }
+
+    /* empty state */
+    .empty-state {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-muted);
+    }
+
+    .empty-state .empty-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .empty-state p { font-size: 0.875rem; }
+
+    /* skeleton */
+    .skeleton {
+      background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 6px;
+      height: 14px;
+    }
+
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <rect width="28" height="28" rx="7" fill="#1a56db"/>
+        <path d="M7 20 L14 8 L21 20" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M10 16 H18" stroke="white" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <span>ESI Together</span>
+    </div>
+
+    <a class="nav-link" href="/static/index.html">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      Chat
+    </a>
+
+    <a class="nav-link active" href="/static/docs.html">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/>
+        <line x1="16" y1="17" x2="8" y2="17"/>
+        <polyline points="10 9 9 9 8 9"/>
+      </svg>
+      Documents
+    </a>
+
+    <div class="sidebar-footer">School Administration AI</div>
+  </aside>
+
+  <!-- Main content -->
+  <div class="main">
+    <div class="topbar">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+      </svg>
+      <h1>Knowledge Base</h1>
+    </div>
+
+    <div class="content">
+
+      <!-- Upload card -->
+      <div class="card">
+        <div class="card-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 16 12 12 8 16"/>
+            <line x1="12" y1="12" x2="12" y2="21"/>
+            <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+          </svg>
+          Upload Document
+        </div>
+
+        <div id="drop-zone">
+          <input type="file" id="file-input" accept=".pdf" aria-label="Upload PDF document" />
+          <div class="drop-icon">📄</div>
+          <div class="drop-label">
+            <strong>Click to browse</strong> or drag &amp; drop a PDF here
+          </div>
+          <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.3rem;">
+            Supported format: PDF &nbsp;·&nbsp; The document will be parsed, chunked, and indexed automatically.
+          </div>
+        </div>
+
+        <div id="upload-progress">
+          <div class="progress-bar-outer">
+            <div class="progress-bar-inner" id="progress-bar"></div>
+          </div>
+          <div id="upload-status">Uploading…</div>
+        </div>
+      </div>
+
+      <!-- Documents card -->
+      <div class="card">
+        <div class="card-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+          </svg>
+          Indexed Documents
+          <span class="doc-count" id="doc-count">Loading…</span>
+          <button
+            onclick="loadDocuments()"
+            title="Refresh"
+            style="margin-left:.25rem;background:none;border:1px solid var(--border);border-radius:6px;cursor:pointer;padding:.25rem .5rem;color:var(--text-muted);font-size:.75rem;display:flex;align-items:center;gap:.3rem;"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+            </svg>
+            Refresh
+          </button>
+        </div>
+
+        <div id="docs-table-wrap">
+          <div class="empty-state" id="loading-indicator">
+            <div class="empty-icon">⏳</div>
+            <p>Loading documents…</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast notification -->
+  <div id="toast"></div>
+
+  <script>
+    /* ── Toast ────────────────────────────────────────────── */
+    let toastTimer;
+    function showToast(msg, type = "") {
+      const el = document.getElementById("toast");
+      el.textContent = msg;
+      el.className = `show ${type}`;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { el.className = ""; }, 3500);
+    }
+
+    /* ── Format date ──────────────────────────────────────── */
+    function fmtDate(iso) {
+      if (!iso) return "—";
+      try {
+        return new Date(iso).toLocaleString(undefined, {
+          dateStyle: "medium", timeStyle: "short"
+        });
+      } catch { return iso; }
+    }
+
+    /* ── Load documents ───────────────────────────────────── */
+    async function loadDocuments() {
+      const wrap    = document.getElementById("docs-table-wrap");
+      const countEl = document.getElementById("doc-count");
+      wrap.innerHTML = `<div class="empty-state" id="loading-indicator"><div class="empty-icon">⏳</div><p>Loading documents…</p></div>`;
+
+      try {
+        const resp = await fetch("/docs");
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        const docs = data.documents || [];
+
+        countEl.textContent = `${docs.length} document${docs.length !== 1 ? "s" : ""}`;
+
+        if (docs.length === 0) {
+          wrap.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-icon">📭</div>
+              <p>No documents in the knowledge base yet.<br>Upload a PDF to get started.</p>
+            </div>`;
+          return;
+        }
+
+        const table = document.createElement("table");
+        table.innerHTML = `
+          <thead>
+            <tr>
+              <th>Filename</th>
+              <th>Chunks</th>
+              <th>Uploaded</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="docs-tbody"></tbody>`;
+
+        const tbody = table.querySelector("#docs-tbody");
+        docs.forEach(doc => {
+          const tr = document.createElement("tr");
+          tr.id = `doc-row-${doc.doc_id}`;
+          const safeFilename = escapeHtml(doc.filename);
+          const safeDocId    = escapeHtml(doc.doc_id);
+          tr.innerHTML = `
+            <td>
+              <div class="filename-cell">
+                <span class="file-icon">📕</span>
+                <span>${safeFilename}</span>
+              </div>
+            </td>
+            <td><span class="badge">${doc.chunk_count} chunks</span></td>
+            <td>${fmtDate(doc.upload_time)}</td>
+            <td>
+              <button class="delete-btn" data-doc-id="${safeDocId}" aria-label="Delete ${safeFilename}">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                  <path d="M10 11v6"/><path d="M14 11v6"/>
+                  <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                </svg>
+                Delete
+              </button>
+            </td>`;
+          tbody.appendChild(tr);
+        });
+
+        wrap.innerHTML = "";
+        wrap.appendChild(table);
+      } catch (err) {
+        wrap.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">⚠️</div>
+            <p>Failed to load documents: ${escapeHtml(err.message)}</p>
+          </div>`;
+        countEl.textContent = "—";
+      }
+    }
+
+    /* ── Delete document ──────────────────────────────────── */
+    async function deleteDoc(docId, btn) {
+      if (!confirm("Remove this document from the knowledge base?")) return;
+      btn.disabled = true;
+      btn.textContent = "Deleting…";
+
+      try {
+        const resp = await fetch(`/docs/${encodeURIComponent(docId)}`, { method: "DELETE" });
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({}));
+          throw new Error(err.detail || `HTTP ${resp.status}`);
+        }
+        const data = await resp.json();
+        showToast(`✅ Deleted ${data.deleted} chunk(s) successfully`, "success");
+        await loadDocuments(); // full refresh
+      } catch (err) {
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg> Delete`;
+        showToast("❌ " + err.message, "error");
+      }
+    }
+
+    /* ── Event delegation for delete buttons ──────────────── */
+    document.getElementById("docs-table-wrap").addEventListener("click", (e) => {
+      const btn = e.target.closest(".delete-btn");
+      if (!btn) return;
+      const docId = btn.dataset.docId;
+      if (docId) deleteDoc(docId, btn);
+    });
+
+    /* ── Upload ───────────────────────────────────────────── */
+    const dropZone    = document.getElementById("drop-zone");
+    const fileInput   = document.getElementById("file-input");
+    const progressDiv = document.getElementById("upload-progress");
+    const progressBar = document.getElementById("progress-bar");
+    const uploadStatus= document.getElementById("upload-status");
+
+    dropZone.addEventListener("dragover", (e) => { e.preventDefault(); dropZone.classList.add("dragover"); });
+    dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
+    dropZone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropZone.classList.remove("dragover");
+      const file = e.dataTransfer.files[0];
+      if (file) uploadFile(file);
+    });
+
+    fileInput.addEventListener("change", () => {
+      if (fileInput.files[0]) uploadFile(fileInput.files[0]);
+      fileInput.value = "";
+    });
+
+    async function uploadFile(file) {
+      if (!file.name.toLowerCase().endsWith(".pdf")) {
+        showToast("❌ Only PDF files are supported.", "error");
+        return;
+      }
+
+      progressDiv.classList.add("visible");
+      progressBar.style.width = "30%";
+      uploadStatus.textContent = `Uploading "${file.name}"…`;
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        progressBar.style.width = "60%";
+        uploadStatus.textContent = "Converting & indexing… (this may take a minute)";
+
+        const resp = await fetch("/docs/upload", { method: "POST", body: formData });
+
+        progressBar.style.width = "90%";
+
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({}));
+          throw new Error(err.detail || `HTTP ${resp.status}`);
+        }
+
+        const data = await resp.json();
+        progressBar.style.width = "100%";
+        uploadStatus.textContent = "Done!";
+        showToast(`✅ "${data.filename}" indexed (${data.chunk_count} chunks)`, "success");
+        await loadDocuments();
+      } catch (err) {
+        uploadStatus.textContent = "Upload failed.";
+        showToast("❌ " + err.message, "error");
+      } finally {
+        setTimeout(() => {
+          progressDiv.classList.remove("visible");
+          progressBar.style.width = "0%";
+          uploadStatus.textContent = "Uploading…";
+        }, 2000);
+      }
+    }
+
+    /* ── Helpers ──────────────────────────────────────────── */
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    /* ── Init ─────────────────────────────────────────────── */
+    loadDocuments();
+  </script>
+</body>
+</html>
