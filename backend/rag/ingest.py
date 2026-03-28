@@ -25,8 +25,8 @@ COLLECTION_NAME = os.getenv("COLLECTION_NAME", "esitogether_documents")
 CHUNK_SIZE_TOKENS = int(os.getenv("CHUNK_SIZE_TOKENS", "3000"))
 OVERLAP_RATIO = float(os.getenv("OVERLAP_RATIO", "0.10"))
 OVERLAP_TOKENS = int(CHUNK_SIZE_TOKENS * OVERLAP_RATIO)
-MAX_EMBED_TOKENS = 4000
-MAX_CHARS_PER_CHUNK = 30_000
+MAX_EMBED_TOKENS = int(os.getenv("MAX_EMBED_TOKENS", "4000"))
+MAX_CHARS_PER_CHUNK = int(os.getenv("MAX_CHARS_PER_CHUNK", "20000"))
 
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
 EMBED_MODEL = os.getenv("EMBED_MODEL", "qwen3-embedding:0.6b")

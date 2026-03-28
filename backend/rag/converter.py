@@ -4,6 +4,8 @@ Processes large PDFs in batches to manage memory usage.
 """
 
 from pathlib import Path
+import fitz  # PyMuPDF
+from docling.document_converter import DocumentConverter
 
 
 def docs_to_markdown(pdf_path: Path, output_dir: Path, tmp_dir: Path, batch_size: int = 10) -> bool:
@@ -19,8 +21,6 @@ def docs_to_markdown(pdf_path: Path, output_dir: Path, tmp_dir: Path, batch_size
     Returns:
         True on success, False on any error.
     """
-    import fitz  # PyMuPDF
-    from docling.document_converter import DocumentConverter
 
     try:
         if not pdf_path.is_file():

@@ -30,7 +30,7 @@ load_dotenv()
 
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-LLM_MODEL = os.getenv("LLM_MODEL", "gpt-4o-mini")
+LLM_MODEL = os.getenv("LLM_MODEL", "gpt-5.4-nano")
 TOP_K = int(os.getenv("TOP_K", "5"))
 
 # Directories (relative to the working directory, i.e. backend/)
