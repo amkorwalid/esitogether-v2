@@ -1,3 +1,23 @@
-/data
+# Environment
 .env
+
+# Data directories (user content)
+/data
+/backend/data/raw/*
+/backend/data/clean/*
+/backend/data/tmp/*
+!backend/data/raw/.gitkeep
+!backend/data/clean/.gitkeep
+!backend/data/tmp/.gitkeep
+
+# ChromaDB persistence
 /chroma_data
+/backend/chroma_data
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
